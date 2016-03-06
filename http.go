@@ -5,15 +5,30 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"reflect"
 )
 
-// WrapHTTPHandler defines a new struct with a single named field called m.
-// m is an http.Handler, which will come in handy when we want to wrap such Handlers
-type WrapHTTPHandler struct {
-	m http.Handler
+// RequestStats tracks stats about the requests made to the server for later
+// usage in monitoring and alerting.
+type RequestStats struct {
+	path string
+	hitCount int
+	errorCount int
+	latency time.Duration
 }
 
-type loggedResponse struct {
+// WrapHTTPHandler defines a new struct with a single named field called handler.
+// handler is an http.Handler, which will come in handy when we want to wrap such Handlers
+type WrapHTTPHandler struct {
+	handler http.Handler
+	stats RequestStats
+}
+
+// LoggedResponse defines a struct that contains an http ResponseWriter and an
+// integer HTTP status code. 
+// This is used in the ServeHTTP method to provide a custom ResponseWriter that
+// can send error codes, as opposed to the default 200 OK response.
+type LoggedResponse struct {
 	http.ResponseWriter
 	status int
 }
@@ -21,32 +36,39 @@ type loggedResponse struct {
 // ServeHTTP is a method with an WrapHTTPHandler as its receiver. 
 // We use it to override the ServeHTTP methods of Handler class, so we can add things like logging 
 // of the latency and status to it.
-func (h *WrapHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	lw := &loggedResponse{ResponseWriter: w, status: 200}
+func (wrappedHandler *WrapHTTPHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	loggedWriter := &LoggedResponse{ResponseWriter: writer, status: 200}
 	start := time.Now()
-	h.m.ServeHTTP(lw, r)
+	wrappedHandler.handler.ServeHTTP(loggedWriter, request)
 	elapsed := time.Since(start)
+	fmt.Println(reflect.TypeOf(elapsed))
 	log.SetPrefix("[Info]")
 	log.Printf("[%s] %s - %d, time elapsed was: %dns.\n", 
-		r.RemoteAddr, r.URL, lw.status, elapsed)
+		request.RemoteAddr, request.URL, loggedWriter.status, elapsed)
 }
 
-func (l *loggedResponse) WriteHeader(status int) {
-	l.status = status
-	l.ResponseWriter.WriteHeader(status)
+// WriteHeader overrides the WriteHeader provided by the ResponseWriter interface/
+// It sends an HTTP response header with status code to the requester.
+func (loggedResponse *LoggedResponse) WriteHeader(status int) {
+	loggedResponse.status = status
+	loggedResponse.ResponseWriter.WriteHeader(status)
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
+// rootHandler takes care of requests for the root of the server, "/". It makes
+// sure that the root is actually what is being requested, since DefaultServeMux
+// matches anything under "/" as root. 
+func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	// The "/" pattern matches everything, so we need to check that we're at the root here.
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
+	if request.URL.Path != "/" {
+		http.NotFound(writer, request)
 		return
 	}
-	fmt.Fprintf(w, "You've hit the home page.")
+	fmt.Fprintf(writer, "You've hit the home page.")
 }
 
 func main() {
+	stats := new(RequestStats) // TODO: make this useful
 	http.HandleFunc("/", rootHandler)
 	http.Handle("/redirect_me", http.RedirectHandler("/", http.StatusFound))
-	log.Fatalln(http.ListenAndServe(":8080", &WrapHTTPHandler{http.DefaultServeMux}))
+	log.Fatalln(http.ListenAndServe(":8080", &WrapHTTPHandler{http.DefaultServeMux, *stats}))
 }
