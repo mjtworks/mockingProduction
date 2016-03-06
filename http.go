@@ -5,23 +5,32 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"reflect"
 )
 
 // RequestStats tracks stats about the requests made to the server for later
 // usage in monitoring and alerting.
 type RequestStats struct {
 	path string
-	hitCount int
-	errorCount int
-	latency time.Duration
+	hitCount HitCounter
+	latency LatencyTracker
+}
+
+type HitCounter struct {
+	path string
+	hitcount int // cumulative
+	responseClass int
+}
+
+type LatencyTracker struct {
+	path string
+	timeSeries []time.Duration
 }
 
 // WrapHTTPHandler defines a new struct with a single named field called handler.
 // handler is an http.Handler, which will come in handy when we want to wrap such Handlers
 type WrapHTTPHandler struct {
 	handler http.Handler
-	stats RequestStats
+	stats map[string]RequestStats
 }
 
 // LoggedResponse defines a struct that contains an http ResponseWriter and an
@@ -41,7 +50,6 @@ func (wrappedHandler *WrapHTTPHandler) ServeHTTP(writer http.ResponseWriter, req
 	start := time.Now()
 	wrappedHandler.handler.ServeHTTP(loggedWriter, request)
 	elapsed := time.Since(start)
-	fmt.Println(reflect.TypeOf(elapsed))
 	log.SetPrefix("[Info]")
 	log.Printf("[%s] %s - %d, time elapsed was: %dns.\n", 
 		request.RemoteAddr, request.URL, loggedWriter.status, elapsed)
@@ -67,8 +75,8 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
-	stats := new(RequestStats) // TODO: make this useful
+	stats := make(map[string]RequestStats)
 	http.HandleFunc("/", rootHandler)
 	http.Handle("/redirect_me", http.RedirectHandler("/", http.StatusFound))
-	log.Fatalln(http.ListenAndServe(":8080", &WrapHTTPHandler{http.DefaultServeMux, *stats}))
+	log.Fatalln(http.ListenAndServe(":8080", &WrapHTTPHandler{http.DefaultServeMux, stats}))
 }
