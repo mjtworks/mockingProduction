@@ -9,6 +9,7 @@ import (
 
 // RequestStats tracks stats about the requests made to the server for later
 // usage in monitoring and alerting.
+// TODO: move the stats stuff into its own stats package.
 type RequestStats struct {
 	path string
 	hitCount HitCounter
@@ -34,7 +35,7 @@ type WrapHTTPHandler struct {
 }
 
 // LoggedResponse defines a struct that contains an http ResponseWriter and an
-// integer HTTP status code. 
+// integer HTTP status code.
 // This is used in the ServeHTTP method to provide a custom ResponseWriter that
 // can send error codes, as opposed to the default 200 OK response.
 type LoggedResponse struct {
@@ -42,8 +43,8 @@ type LoggedResponse struct {
 	status int
 }
 
-// ServeHTTP is a method with an WrapHTTPHandler as its receiver. 
-// We use it to override the ServeHTTP methods of Handler class, so we can add things like logging 
+// ServeHTTP is a method with an WrapHTTPHandler as its receiver.
+// We use it to override the ServeHTTP methods of Handler class, so we can add things like logging
 // of the latency and status to it.
 func (wrappedHandler *WrapHTTPHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	loggedWriter := &LoggedResponse{ResponseWriter: writer, status: 200}
@@ -51,7 +52,7 @@ func (wrappedHandler *WrapHTTPHandler) ServeHTTP(writer http.ResponseWriter, req
 	wrappedHandler.handler.ServeHTTP(loggedWriter, request)
 	elapsed := time.Since(start)
 	log.SetPrefix("[Info]")
-	log.Printf("[%s] %s - %d, time elapsed was: %dns.\n", 
+	log.Printf("[%s] %s - %d, time elapsed was: %dns.\n",
 		request.RemoteAddr, request.URL, loggedWriter.status, elapsed)
 }
 
@@ -64,7 +65,7 @@ func (loggedResponse *LoggedResponse) WriteHeader(status int) {
 
 // rootHandler takes care of requests for the root of the server, "/". It makes
 // sure that the root is actually what is being requested, since DefaultServeMux
-// matches anything under "/" as root. 
+// matches anything under "/" as root.
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	// The "/" pattern matches everything, so we need to check that we're at the root here.
 	if request.URL.Path != "/" {

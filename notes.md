@@ -30,3 +30,12 @@ func (l *loggedResponse) WriteHeader(status int)
 func hello(w http.ResponseWriter, r *http.Request)
 
 func goodbye(w http.ResponseWriter, r *http.Request)
+
+-----Next steps------
+- talk about how to plan out the metrics, latency, hitcount
+- use streamz as a model, eg have a Gauge and Counter and Distribution metric type
+- talk about the differences between each (and think about how to bucket the distribution type)
+- create new streamz with those metric types
+- increment those streamz in the wrapped handler
+- remember that these are exported for only this particular binary, not aggregated across running go instances
+- think about and write out all of this before writing any code, so as to have a plan to follow.
