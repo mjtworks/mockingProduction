@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+  "flag"
 )
 
 // RequestStats tracks stats about the requests made to the server for later
@@ -76,8 +77,12 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
+  // run with "go run http.go -port=8090"
+  portNumberFlag := flag.String("port", "8080", "the port number to run the http on")
+  portNumber := ":"
+  portNumber += *portNumberFlag
 	stats := make(map[string]RequestStats)
 	http.HandleFunc("/", rootHandler)
 	http.Handle("/redirect_me", http.RedirectHandler("/", http.StatusFound))
-	log.Fatalln(http.ListenAndServe(":8080", &WrapHTTPHandler{http.DefaultServeMux, stats}))
+	log.Fatalln(http.ListenAndServe(portNumber, &WrapHTTPHandler{http.DefaultServeMux, stats}))
 }
