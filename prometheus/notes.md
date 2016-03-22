@@ -14,3 +14,14 @@ service) to see visualizations and access the expression browser, where you can
 run queries.
 
 next steps will be to instrument the http server.
+
+--instrumentation--
+- using the golang client library: https://godoc.org/github.com/prometheus/client_golang/prometheus
+- remember you can declare variables in a var(..) group
+- we want latency, errors, total requests, so create metrics representing those (histogram, counter, counter)
+- check out handler and instrumenthandlerfunc: https://godoc.org/github.com/prometheus/client_golang/prometheus#Handler
+  - apparently we get some metrics for free if we use the provided handles, but declare them explicitly in the program anyway
+- rename http.go to main.go
+- talk about building the binary
+- hook it into graphana: https://prometheus.io/docs/visualization/grafana/
+

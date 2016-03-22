@@ -6,27 +6,9 @@ import (
 	"net/http"
 	"time"
   "flag"
+
+  "github.com/prometheus/client_golang/prometheus"
 )
-
-// RequestStats tracks stats about the requests made to the server for later
-// usage in monitoring and alerting.
-// TODO: move the stats stuff into its own stats package.
-type RequestStats struct {
-	path string
-	hitCount HitCounter
-	latency LatencyTracker
-}
-
-type HitCounter struct {
-	path string
-	hitcount int // cumulative
-	responseClass int
-}
-
-type LatencyTracker struct {
-	path string
-	timeSeries []time.Duration
-}
 
 // WrapHTTPHandler defines a new struct with a single named field called handler.
 // handler is an http.Handler, which will come in handy when we want to wrap such Handlers
@@ -83,6 +65,9 @@ func main() {
   portNumber += *portNumberFlag
 	stats := make(map[string]RequestStats)
 	http.HandleFunc("/", rootHandler)
+  http.Handle("/", prometheus.InstrumentHandler(
+    "", http.FileServer(http.Dir("/usr/share/doc")),
+  ))
 	http.Handle("/redirect_me", http.RedirectHandler("/", http.StatusFound))
 	log.Fatalln(http.ListenAndServe(portNumber, &WrapHTTPHandler{http.DefaultServeMux, stats}))
 }
