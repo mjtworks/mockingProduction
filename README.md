@@ -10,5 +10,5 @@ the http server directory:
 ```
 $ go get -d
 $ go build
-./http -port=8080
+$ ./http -port=8080
 ```
