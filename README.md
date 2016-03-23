@@ -7,7 +7,8 @@ alerting, and logging.
 Build and run the http server binary by issuing the following commands from
 the http server directory:
 
-`$ go get -d`
-`$ go build`
-`./http -port=8080`
-
+```
+$ go get -d
+$ go build
+./http -port=8080
+```
