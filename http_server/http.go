@@ -32,23 +32,22 @@ var (
 	)
 )
 
+func (loggedResponse *LoggedResponse) WriteHeader(status int) {
+	loggedResponse.status = status
+	loggedResponse.ResponseWriter.WriteHeader(status)
+}
+
 func (wrappedHandler *WrapHTTPHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	loggedWriter := &LoggedResponse{ResponseWriter: writer, status: 200}
 	
-	status := strconv.Itoa(loggedWriter.status)
-	httpResponses.WithLabelValues(status, request.Method).Inc()
-	
 	start := time.Now()
 	wrappedHandler.handler.ServeHTTP(loggedWriter, request)
+	status := strconv.Itoa(loggedWriter.status)
+	httpResponses.WithLabelValues(status, request.Method).Inc()
 	elapsed := time.Since(start)
 	log.SetPrefix("[Info]")
 	log.Printf("[%s] %s - %d, Method: %s, time elapsed was: %dns.\n",
 		request.RemoteAddr, request.URL, loggedWriter.status, request.Method, elapsed)
-}
-
-func (loggedResponse *LoggedResponse) WriteHeader(status int) {
-	loggedResponse.status = status
-	loggedResponse.ResponseWriter.WriteHeader(status)
 }
 
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
@@ -56,6 +55,7 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 		http.NotFound(writer, request)
 		return
 	}
+	writer.WriteHeader(http.StatusOK)
 	fmt.Fprintf(writer, "You've hit the home page.")
 }
 
