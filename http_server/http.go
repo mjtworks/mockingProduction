@@ -21,12 +21,22 @@ type LoggedResponse struct {
 }
 
 var (
-	httpResponses = prometheus.NewCounterVec(
+	httpResponsesTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "mocking_production",
 	        Subsystem: "http_server",
-	        Name:      "http_responses",
-	        Help:      "The number of http responses issued, labelled with response code.",
+	        Name:      "http_responses_total",
+	        Help:      "The count of http responses issued, classified by code and method.",
+	    },
+	    []string{"code", "method"},
+	)
+
+	httpResponseLatencies = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: "mocking_production",
+	        Subsystem: "http_server",
+	        Name:      "http_response_latencies",
+	        Help:      "Distribution of http response latencies (ms), classified by code and method.",
 	    },
 	    []string{"code", "method"},
 	)
@@ -42,12 +52,16 @@ func (wrappedHandler *WrapHTTPHandler) ServeHTTP(writer http.ResponseWriter, req
 	
 	start := time.Now()
 	wrappedHandler.handler.ServeHTTP(loggedWriter, request)
-	status := strconv.Itoa(loggedWriter.status)
-	httpResponses.WithLabelValues(status, request.Method).Inc()
 	elapsed := time.Since(start)
+	msElapsed := elapsed / time.Millisecond
+
+	status := strconv.Itoa(loggedWriter.status)
+	httpResponsesTotal.WithLabelValues(status, request.Method).Inc()
+	httpResponseLatencies.WithLabelValues(status, request.Method).Observe(float64(msElapsed))
+	
 	log.SetPrefix("[Info]")
-	log.Printf("[%s] %s - %d, Method: %s, time elapsed was: %dns.\n",
-		request.RemoteAddr, request.URL, loggedWriter.status, request.Method, elapsed)
+	log.Printf("[%s] %s - %d, Method: %s, time elapsed was: %d(ms).\n",
+		request.RemoteAddr, request.URL, loggedWriter.status, request.Method, msElapsed)
 }
 
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
@@ -60,7 +74,8 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func init() {
-    prometheus.MustRegister(httpResponses)
+    prometheus.MustRegister(httpResponsesTotal)
+    prometheus.MustRegister(httpResponseLatencies)
 }
 
 func main() {
@@ -71,6 +86,7 @@ func main() {
 	portNumber := ":" + *portNumberFlag
 	// Expose the registered metrics via the special prometheus metrics handler.
 	http.Handle("/metrics", prometheus.Handler())
+
 	http.HandleFunc("/", rootHandler)
 	http.Handle("/redirect_me", http.RedirectHandler("/", http.StatusFound))
 	log.Fatalln(http.ListenAndServe(portNumber, &WrapHTTPHandler{http.DefaultServeMux}))
