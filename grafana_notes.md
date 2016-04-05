@@ -1,4 +1,4 @@
-Installing
+Installing grafana
 (see http://docs.grafana.org/installation/debian/)
 
 # add graphana repo to sources
