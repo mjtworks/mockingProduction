@@ -15,3 +15,7 @@ Checking alerting_rules
 - Checked out the alert endpoint and saw it was pending
 
 Next: Configure prometheus to send these bad conditions to alertmanager, so alerts can actually get delivered
+(https://github.com/prometheus/alertmanager)
+- install alertmanager dependencies
+- fought with the gopath, now installed to  ~/go/src/github.com/prometheus/alertmanager
+- made the config file, next step is to actually modify and test it
