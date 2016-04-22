@@ -13,9 +13,23 @@ Checking alerting_rules
 - add a 500 handler so I could intentionally cause 500s
 - Created a new script to just make 500 requests (still some 200’s from prometheus scraping)
 - Checked out the alert endpoint and saw it was pending
-
-Next: Configure prometheus to send these bad conditions to alertmanager, so alerts can actually get delivered
-(https://github.com/prometheus/alertmanager)
-- install alertmanager dependencies
+- installed alertmanager dependencies
 - fought with the gopath, now installed to  ~/go/src/github.com/prometheus/alertmanager
-- made the config file, next step is to actually modify and test it
+- made the config file, added my email address as the receiver
+- ran alertmanager and prometheus and got an alert to fire
+	$ ./alertmanager -config.file=/home/phelan/Repositories/mockingProduction/alerting/alertmanager_config.yml
+	$ /opt/prometheus-0.17.0.linux-386/prometheus -config.file=/home/phelan/Repositories/mockingProduction/prometheus/prometheus.yml -storage.local.path=/tmp/data -alertmanager.url=http://localhost:9093/	
+- installed sendmail
+	$ sudo apt-get install sendmail
+	$ sudo sendmailconfig
+- trying to configure sendmail, can't send to gmail for some reason. 
+
+this works:
+$ echo "Just testing my sendmail gmail relay" | mail -s "Sendmail gmail Relay" phelan@ratqueens
+this doesn't:
+echo "Just testing my sendmail gmail relay" | mail -s "Sendmail gmail Relay" phelan.vendeville@gmail.com
+
+- used the tutorial here to set it up:
+https://linuxconfig.org/configuring-gmail-as-sendmail-email-relay
+- and the tutorial here to fix my /etc/hosts
+http://serverfault.com/questions/58363/my-unqualified-host-name-foo-bar-unknown-problem

@@ -93,17 +93,17 @@ inhibit_rules:
 receivers:
 - name: 'team-X-mails'
   email_configs:
-  - to: 'team-X+alerts@example.org'
+  - to: 'phelan.vendeville@gmail.com'
 
 - name: 'team-X-pager'
   email_configs:
-  - to: 'team-X+alerts-critical@example.org'
+  - to: 'phelan.vendeville@gmail.com'
   pagerduty_configs:
   - service_key: <team-X-key>
 
 - name: 'team-Y-mails'
   email_configs:
-  - to: 'team-Y+alerts@example.org'
+  - to: 'phelan.vendeville@gmail.com'
 
 - name: 'team-Y-pager'
   pagerduty_configs:
