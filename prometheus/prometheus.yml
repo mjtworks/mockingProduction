@@ -8,8 +8,11 @@ global:
   external_labels:
     monitor: 'http-example'
 
-rule_files: # aggregations specified here
+rule_files:
+  # specify aggregations
   - 'prometheus.rules'
+  # specify alerting rules
+  - '../alerting/alerting.rules'
 
 # A scrape configuration containing exactly one endpoint to scrape:
 # Here it's Prometheus itself.

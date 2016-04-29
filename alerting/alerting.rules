@@ -1,0 +1,20 @@
+# alert if any webserver has a high ratio of 500s
+ALERT High500s
+  IF sum(rate(mocking_production_http_server_http_responses_total{code=~"^5..$"}[5m])) / sum(rate(mocking_production_http_server_http_responses_total[5m])) > .002
+  FOR 10m
+  LABELS { severity = "page" }
+  ANNOTATIONS {
+    summary = "High 500 ratio on {{ $labels.instance }}.",
+    description = "{{ $labels.instance }} has an error ratio of {{ $value }} for 10m.",
+    runbook = "www.playbook.com/high500s",
+  }
+
+# alert if any webserver has a high 95th percentile latency
+ALERT High95thWebLatency
+  IF histogram_quantile(0.95, sum(rate(mocking_production_http_server_http_response_latencies_bucket[5m])) by (code, le)) > 10
+  FOR 1m
+  ANNOTATIONS {
+    summary = "High 95th %ile request latency on {{ $labels.instance }}",
+    description = "{{ $labels.instance }} has a 95th %ile request latency above 10ms (current value: {{ $value }}ms)",
+  }
+ 
