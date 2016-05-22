@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+  "html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -51,7 +52,8 @@ func (wrappedHandler *WrapHTTPHandler) ServeHTTP(writer http.ResponseWriter, req
 	loggedWriter := &LoggedResponse{ResponseWriter: writer, status: 200}
 
 	start := time.Now()
-	wrappedHandler.handler.ServeHTTP(loggedWriter, request)
+  t, _ := template.ParseFiles("response.html")
+  t.Execute(loggedWriter, request)
 	elapsed := time.Since(start)
 	msElapsed := elapsed / time.Millisecond
 

@@ -1,0 +1,13 @@
+1) update the webserver to render some html
+  done: used https://golang.org/doc/articles/wiki/#tmp_6
+
+2) create probers (in java) to make requests for html and check for certain
+   elements.
+3) have the probers update a `status dashboard` showing successful vs unsuccessful
+   probes.
+
+
+(to get around gopath issues:)
+$ export GOPATH=~/go
+$ go get -d
+
