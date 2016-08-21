@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-  "html/template"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -52,8 +52,8 @@ func (wrappedHandler *WrapHTTPHandler) ServeHTTP(writer http.ResponseWriter, req
 	loggedWriter := &LoggedResponse{ResponseWriter: writer, status: 200}
 
 	start := time.Now()
-  t, _ := template.ParseFiles("response.html")
-  t.Execute(loggedWriter, request)
+	t, _ := template.ParseFiles("response.html")
+	t.Execute(loggedWriter, request)
 	elapsed := time.Since(start)
 	msElapsed := elapsed / time.Millisecond
 
@@ -87,7 +87,7 @@ func init() {
 
 func main() {
 	// run with "go run http.go -port=8090"
-	portNumberFlag := flag.String("port", "8080", "the port number to run the http on")
+	portNumberFlag := flag.String("port", "8080", "the port number to run the http server on")
 	// Once all flags are declared, call flag.Parse() to execute the command-line parsing.
 	flag.Parse()
 	portNumber := ":" + *portNumberFlag
