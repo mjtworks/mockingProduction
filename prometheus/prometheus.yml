@@ -22,15 +22,18 @@ scrape_configs:
   - job_name: 'prometheus'
     # Override the global default and scrape targets from this job every 5 seconds.
     scrape_interval: 5s
-    target_groups:
-      - targets: ['localhost:9090']
+    static_configs:
+    - targets: 
+      - 'localhost:9090'
 
   # prometheus example-random, client_golang/examples/random/main.go
   - job_name: 'example-random'
     # Override the global default and scrape targets from this job every 5 seconds.
     scrape_interval: 5s
-    target_groups:
-      - targets: ['localhost:8080', 'localhost:8081']
+    static_configs:
+      - targets: 
+        - 'localhost:8080'
+        - 'localhost:8081'
         labels:
           group: 'production'
       - targets: ['localhost:8082']
@@ -38,5 +41,6 @@ scrape_configs:
           group: 'canary'
 
   - job_name: 'http-server-example'
-    target_groups:
-      - targets: ['localhost:7070']
+    static_configs:
+      - targets: 
+      - 'localhost:7070'
