@@ -1,0 +1,18 @@
+route:
+  group_by: [Alertname]
+  # Every alert is sent to the 'email' receiver.
+  receiver: email
+
+receivers:
+  # Receiver is a named configuration of one or more notification integrations.
+  # In this case, email.
+- name: email
+  email_configs:
+  - to: "user.name@gmail.com"
+    from: "user.name@gmail.com"
+    smarthost: smtp.gmail.com:587
+    html: '{{ template "email.default.html" . }}'
+    auth_username: "user.name@gmail.com"
+    auth_identity: "user.name@gmail.com"
+    auth_password: "somepassword"
+
